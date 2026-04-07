@@ -10,7 +10,6 @@ import { getStorage }    from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 
 // ⚠️ SUBSTITUA com suas credenciais do Firebase Console
 // https://console.firebase.google.com → Configurações do projeto → Seus apps
-const // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDUXluCv1WiVG4l9-VfO-MuEmKdQombQuE",
   authDomain: "fretex-b6a66.firebaseapp.com",
