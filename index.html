@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fretex — Fretes & Mudanças</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/global.css" />
+  <style>
+    body {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Grid texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+    }
+
+    /* Diagonal accent bar */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -100px;
+      right: -80px;
+      width: 340px;
+      height: 340px;
+      background: var(--amber);
+      opacity: 0.08;
+      border-radius: 50%;
+      filter: blur(60px);
+      pointer-events: none;
+    }
+
+    .splash-wrap {
+      width: 100%;
+      max-width: 400px;
+      padding: 2rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .logo-badge {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 0.5rem;
+    }
+
+    .logo-icon {
+      width: 52px;
+      height: 52px;
+      background: var(--amber);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      box-shadow: 0 0 30px rgba(245,158,11,0.3);
+    }
+
+    .logo-text {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 3rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .logo-text span {
+      color: var(--amber);
+    }
+
+    .tagline {
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 3rem;
+      animation: fadeUp 0.6s 0.1s ease both;
+    }
+
+    .card {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+
+    .card-title {
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .card-sub {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    /* Tipo de perfil */
+    .perfil-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .perfil-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 1rem 0.5rem;
+      background: var(--bg);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+
+    .perfil-btn .icon {
+      font-size: 1.6rem;
+      line-height: 1;
+    }
+
+    .perfil-btn:hover,
+    .perfil-btn.active {
+      border-color: var(--amber);
+      color: var(--amber);
+      background: rgba(245,158,11,0.06);
+    }
+
+    .perfil-btn.active {
+      box-shadow: 0 0 0 1px var(--amber);
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.25rem;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .divider span {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+
+    /* Botão Google */
+    .btn-google {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 0.85rem 1rem;
+      background: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Barlow', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s;
+      margin-bottom: 0.75rem;
+    }
+
+    .btn-google:hover { opacity: 0.92; transform: translateY(-1px); }
+    .btn-google:active { transform: translateY(0); }
+
+    .btn-google svg {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+    }
+
+    /* Botão principal âmbar */
+    .btn-primary {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      background: var(--amber);
+      border: none;
+      border-radius: 10px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: #111;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+      text-transform: uppercase;
+    }
+
+    .btn-primary:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(245,158,11,0.35);
+    }
+
+    .btn-primary:active { transform: translateY(0); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* Estado de loading */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .loading-overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    .status-msg {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 1rem;
+      min-height: 1.2em;
+    }
+
+    .error-msg {
+      color: #f87171;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="loading-overlay" id="loadingOverlay">
+    <div>
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <div class="splash-wrap">
+    <div class="logo-badge">
+      <div class="logo-icon">🚛</div>
+      <div class="logo-text">FRETE<span>X</span></div>
+    </div>
+    <p class="tagline">Fretes &amp; Mudanças na Baixada Santista</p>
+
+    <div class="card">
+      <div class="card-title">Bem-vindo</div>
+      <div class="card-sub">Selecione seu perfil para continuar</div>
+
+      <div class="perfil-grid">
+        <button class="perfil-btn active" data-perfil="cliente" onclick="selecionarPerfil('cliente', this)">
+          <span class="icon">📦</span>
+          CLIENTE
+        </button>
+        <button class="perfil-btn" data-perfil="motorista" onclick="selecionarPerfil('motorista', this)">
+          <span class="icon">🚛</span>
+          MOTORISTA
+        </button>
+      </div>
+
+      <div class="divider"><span>entrar com</span></div>
+
+      <button class="btn-google" onclick="loginGoogle()">
+        <!-- Google SVG icon -->
+        <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.6 2.4 30.1 0 24 0 14.6 0 6.6 5.4 2.6 13.3l7.8 6c1.9-5.6 7.1-9.8 13.6-9.8z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 6.9-10 6.9-17z"/><path fill="#FBBC05" d="M10.4 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.8-6A23.9 23.9 0 0 0 0 24c0 3.9.9 7.5 2.6 10.7l7.8-6z"/><path fill="#34A853" d="M24 48c6.1 0 11.2-2 14.9-5.4l-7.5-5.8c-2 1.4-4.6 2.2-7.4 2.2-6.5 0-12-4.3-13.9-10.1l-7.8 6C6.6 42.6 14.6 48 24 48z"/></svg>
+        Entrar com Google
+      </button>
+
+      <p class="status-msg" id="statusMsg"></p>
+    </div>
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, serverTimestamp }
+      from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // ⚠️ SUBSTITUA com suas credenciais Firebase
+    const firebaseConfig = {
+      apiKey: "SUA_API_KEY",
+      authDomain: "SEU_PROJECT.firebaseapp.com",
+      projectId: "SEU_PROJECT_ID",
+      storageBucket: "SEU_PROJECT.appspot.com",
+      messagingSenderId: "SEU_SENDER_ID",
+      appId: "SEU_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const provider = new GoogleAuthProvider();
+
+    // Expor globalmente para os handlers inline
+    window._auth = auth;
+    window._db = db;
+    window._provider = provider;
+    window._signInWithPopup = signInWithPopup;
+    window._doc = doc;
+    window._getDoc = getDoc;
+    window._setDoc = setDoc;
+    window._serverTimestamp = serverTimestamp;
+
+    // Verificar se já está logado
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        mostrarLoading(true);
+        await redirecionarPorPerfil(user);
+      }
+    });
+  </script>
+
+  <script>
+    let perfilSelecionado = 'cliente';
+
+    function selecionarPerfil(perfil, btn) {
+      perfilSelecionado = perfil;
+      document.querySelectorAll('.perfil-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    function mostrarLoading(show) {
+      document.getElementById('loadingOverlay').classList.toggle('show', show);
+    }
+
+    function setStatus(msg, isError = false) {
+      const el = document.getElementById('statusMsg');
+      el.textContent = msg;
+      el.className = 'status-msg' + (isError ? ' error-msg' : '');
+    }
+
+    async function redirecionarPorPerfil(user) {
+      const db = window._db;
+      const docRef = window._doc(db, 'users', user.uid);
+      const snap = await window._getDoc(docRef);
+
+      if (!snap.exists()) {
+        // Novo usuário — salvar com perfil escolhido
+        await window._setDoc(docRef, {
+          nome: user.displayName,
+          email: user.email,
+          foto: user.photoURL,
+          tipo: perfilSelecionado,
+          telefone: '',
+          criadoEm: window._serverTimestamp(),
+          ativo: perfilSelecionado !== 'motorista' // motoristas aguardam aprovação
+        });
+        redirecionarPara(perfilSelecionado);
+      } else {
+        // Usuário existente — redirecionar pelo tipo salvo
+        const tipo = snap.data().tipo;
+        redirecionarPara(tipo);
+      }
+    }
+
+    function redirecionarPara(tipo) {
+      const rotas = {
+        cliente:   'cliente.html',
+        motorista: 'motorista.html',
+        admin:     'admin.html'
+      };
+      window.location.href = rotas[tipo] || 'cliente.html';
+    }
+
+    async function loginGoogle() {
+      setStatus('');
+      mostrarLoading(true);
+      try {
+        const result = await window._signInWithPopup(window._auth, window._provider);
+        await redirecionarPorPerfil(result.user);
+      } catch (err) {
+        mostrarLoading(false);
+        if (err.code === 'auth/popup-closed-by-user') {
+          setStatus('Login cancelado.', true);
+        } else {
+          setStatus('Erro ao entrar. Tente novamente.', true);
+          console.error(err);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
