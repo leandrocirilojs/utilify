@@ -169,14 +169,16 @@
     query, where, orderBy, onSnapshot, updateDoc, getDocs
   } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-  const firebaseConfig = {
-    apiKey: "SUA_API_KEY",
-    authDomain: "SEU_PROJECT.firebaseapp.com",
-    projectId: "SEU_PROJECT_ID",
-    storageBucket: "SEU_PROJECT.appspot.com",
-    messagingSenderId: "SEU_SENDER_ID",
-    appId: "SEU_APP_ID"
-  };
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDUXluCv1WiVG4l9-VfO-MuEmKdQombQuE",
+  authDomain: "fretex-b6a66.firebaseapp.com",
+  projectId: "fretex-b6a66",
+  storageBucket: "fretex-b6a66.firebasestorage.app",
+  messagingSenderId: "311626266080",
+  appId: "1:311626266080:web:0bed5cd36bba720c19e785",
+  measurementId: "G-HD4H3SFX1Q"
+};
 
   const app  = initializeApp(firebaseConfig);
   const auth = getAuth(app);
