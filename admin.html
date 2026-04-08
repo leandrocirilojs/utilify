@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fretex — Admin</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/global.css" />
+  <style>
+    body { padding-bottom: 70px; }
+
+    .spinner-lg {
+      width: 36px; height: 36px;
+      border: 3px solid var(--border);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Stats ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.65rem; margin-bottom: 1rem; }
+    .stat-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1rem; text-align: center;
+    }
+    .stat-value { font-family: var(--font-display); font-size: 2rem; font-weight: 900; color: var(--amber); line-height: 1; }
+    .stat-label { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* ── Cards pedido ── */
+    .pedido-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 0.75rem;
+      cursor: pointer; transition: border-color 0.2s, transform 0.15s;
+      animation: fadeUp 0.3s ease both;
+    }
+    .pedido-card:hover { border-color: var(--border-light); transform: translateY(-2px); }
+    .pedido-card:active { transform: translateY(0); }
+    .pedido-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+    .pedido-valor { font-family: var(--font-display); font-size: 0.85rem; color: var(--text-muted); font-weight: 600; }
+    .pedido-valor.has-valor { color: var(--amber); font-size: 1rem; }
+    .pedido-rota { display: flex; flex-direction: column; gap: 4px; margin-bottom: 0.75rem; padding-left: 0.25rem; }
+    .rota-item { display: flex; align-items: center; gap: 10px; font-size: 0.88rem; color: var(--text-secondary); }
+    .rota-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .rota-dot.origem  { background: var(--amber); }
+    .rota-dot.destino { background: var(--success); }
+    .rota-line { width: 2px; height: 12px; background: var(--border-light); margin-left: 4px; }
+    .pedido-meta { display: flex; gap: 1rem; font-size: 0.78rem; color: var(--text-muted); flex-wrap: wrap; }
+
+    /* ── Filtro tabs ── */
+    .filter-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; overflow-x: auto; padding-bottom: 2px; }
+    .filter-tab {
+      flex-shrink: 0; padding: 0.4rem 0.85rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 999px; font-family: var(--font-display);
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; color: var(--text-muted);
+      cursor: pointer; transition: all 0.2s;
+    }
+    .filter-tab.active { background: var(--amber); color: #111; border-color: var(--amber); }
+
+    /* ── Cards de motorista ── */
+    .motorista-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 1rem; margin-bottom: 0.75rem;
+      display: flex; align-items: center; gap: 0.75rem;
+      animation: fadeUp 0.3s ease both;
+    }
+    .motorista-avatar {
+      width: 48px; height: 48px; border-radius: 50%; object-fit: cover;
+      border: 2px solid var(--border-light); flex-shrink: 0;
+    }
+    .motorista-info { flex: 1; min-width: 0; }
+    .motorista-nome { font-family: var(--font-display); font-size: 1rem; font-weight: 700; color: var(--text-primary); }
+    .motorista-meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .motorista-actions { display: flex; gap: 0.4rem; flex-shrink: 0; }
+
+    .btn-xs {
+      padding: 0.35rem 0.65rem;
+      font-size: 0.75rem; border-radius: var(--radius-sm);
+    }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 200; display: flex; align-items: flex-end;
+      opacity: 0; pointer-events: none; transition: opacity 0.25s;
+    }
+    .modal-overlay.show { opacity: 1; pointer-events: all; }
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      border-top: 1px solid var(--border-light);
+      width: 100%; max-height: 90dvh; overflow-y: auto;
+      padding: 1.25rem; transform: translateY(20px); transition: transform 0.25s;
+    }
+    .modal-overlay.show .modal { transform: translateY(0); }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+    .modal-title { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; color: var(--text-primary); }
+    .modal-close {
+      background: var(--surface-2); border: none; color: var(--text-muted);
+      width: 32px; height: 32px; border-radius: 50%; cursor: pointer;
+      font-size: 0.9rem; display: flex; align-items: center; justify-content: center; transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--text-primary); }
+    .detail-group { display: flex; flex-direction: column; gap: 4px; }
+    .detail-label { font-size: 0.75rem; color: var(--text-muted); font-family: var(--font-display); font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; }
+    .detail-value { font-size: 0.95rem; color: var(--text-secondary); }
+    .fotos-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.25rem; }
+    .foto-grid-img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: var(--radius-sm); border: 1px solid var(--border-light); }
+
+    /* ── Toast ── */
+    .toast-container {
+      position: fixed; bottom: 5rem; left: 50%; transform: translateX(-50%);
+      z-index: 999; display: flex; flex-direction: column; gap: 0.5rem;
+      pointer-events: none; width: calc(100% - 2rem); max-width: 400px;
+    }
+    .toast {
+      background: var(--surface); border: 1px solid var(--border-light);
+      border-radius: var(--radius-md); padding: 0.75rem 1rem; font-size: 0.9rem;
+      color: var(--text-primary); box-shadow: var(--shadow-md);
+      animation: toastIn 0.3s ease both; pointer-events: all;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .toast.success { border-left: 3px solid var(--success); }
+    .toast.error   { border-left: 3px solid var(--danger); }
+    .toast.info    { border-left: 3px solid var(--info); }
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Indicador de pendentes ── */
+    .badge-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%;
+      background: var(--danger); color: #fff;
+      font-size: 0.65rem; font-weight: 800; margin-left: 4px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+<header class="app-header" id="appHeader"></header>
+
+<main class="main-container" id="mainContent">
+  <div class="flex-center" style="height:60vh"><div class="spinner-lg"></div></div>
+</main>
+
+<nav class="bottom-nav">
+  <a href="#" class="active" data-view="dashboard" onclick="trocarView('dashboard',this);return false;">
+    <span class="nav-icon">📊</span>Dashboard
+  </a>
+  <a href="#" data-view="pedidos" onclick="trocarView('pedidos',this);return false;">
+    <span class="nav-icon">📦</span>Pedidos
+  </a>
+  <a href="#" data-view="motoristas" onclick="trocarView('motoristas',this);return false;">
+    <span class="nav-icon">🚛</span>Motoristas
+  </a>
+</nav>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="fecharModal()">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 class="modal-title" id="modalTitle">Detalhes</h3>
+      <button class="modal-close" onclick="fecharModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getAuth, onAuthStateChanged, signOut }
+    from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  import {
+    getFirestore, collection, doc, getDoc, getDocs,
+    query, where, orderBy, onSnapshot, updateDoc, deleteDoc
+  } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "SUA_API_KEY",
+    authDomain: "SEU_PROJECT.firebaseapp.com",
+    projectId: "SEU_PROJECT_ID",
+    storageBucket: "SEU_PROJECT.appspot.com",
+    messagingSenderId: "SEU_SENDER_ID",
+    appId: "SEU_APP_ID"
+  };
+
+  const app  = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+
+  let currentUser  = null;
+  let userData     = null;
+  let unsubPedidos = null;
+  let filtroAtivo  = 'todos';
+
+  // ─── Auth guard ───────────────────────────────────────
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) { window.location.href = 'index.html'; return; }
+    const snap = await getDoc(doc(db, 'users', user.uid));
+    if (!snap.exists()) { window.location.href = 'index.html'; return; }
+    const data = snap.data();
+    if (data.tipo !== 'admin') { window.location.href = 'index.html'; return; }
+    currentUser = user;
+    userData    = data;
+    inicializar();
+  });
+
+  function inicializar() {
+    renderizarHeader();
+    trocarView('dashboard', document.querySelector('[data-view="dashboard"]'));
+  }
+
+  function renderizarHeader() {
+    const header = document.getElementById('appHeader');
+    const nome = userData.nome?.split(' ')[0] || 'Admin';
+    const foto = currentUser.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(nome)}&background=F59E0B&color=111`;
+    header.innerHTML = `
+      <div class="logo">FRETE<span>X</span> <span style="font-size:0.7rem;color:var(--text-muted);font-weight:400;letter-spacing:0.1em">ADMIN</span></div>
+      <div class="user-pill" onclick="window._logout()">
+        <img src="${foto}" alt="${nome}" />
+        <span>${nome}</span>
+      </div>`;
+    window._logout = async () => { await signOut(auth); window.location.href = 'index.html'; };
+  }
+
+  // ─── Navegação ────────────────────────────────────────
+  window.trocarView = (view, el) => {
+    document.querySelectorAll('.bottom-nav a').forEach(a => a.classList.remove('active'));
+    if (el) el.classList.add('active');
+    if (unsubPedidos) { unsubPedidos(); unsubPedidos = null; }
+    const main = document.getElementById('mainContent');
+    if (view === 'dashboard')  renderDashboard(main);
+    if (view === 'pedidos')    renderPedidos(main);
+    if (view === 'motoristas') renderMotoristas(main);
+  };
+
+  // ─── VIEW: DASHBOARD ─────────────────────────────────
+  async function renderDashboard(main) {
+    main.innerHTML = `
+      <div class="section-label" style="margin-top:1rem">Visão geral</div>
+      <div class="stats-grid" id="statsGrid">
+        ${[...Array(4)].map(() => `<div class="stat-card"><div class="stat-value">—</div><div class="stat-label">...</div></div>`).join('')}
+      </div>
+      <div class="section-label">Pedidos recentes</div>
+      <div id="pedidosRecentes">
+        <div class="flex-center" style="height:30vh"><div class="spinner-lg"></div></div>
+      </div>`;
+
+    // Stats
+    try {
+      const [todos, aguardando, andamento, concluido] = await Promise.all([
+        getDocs(collection(db, 'pedidos')),
+        getDocs(query(collection(db, 'pedidos'), where('status', '==', 'aguardando'))),
+        getDocs(query(collection(db, 'pedidos'), where('status', '==', 'andamento'))),
+        getDocs(query(collection(db, 'pedidos'), where('status', '==', 'concluido'))),
+      ]);
+      const grid = document.getElementById('statsGrid');
+      if (grid) grid.innerHTML = `
+        <div class="stat-card"><div class="stat-value">${todos.size}</div><div class="stat-label">Total de pedidos</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--status-aguardando)">${aguardando.size}</div><div class="stat-label">Aguardando</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--status-andamento)">${andamento.size}</div><div class="stat-label">Em andamento</div></div>
+        <div class="stat-card"><div class="stat-value" style="color:var(--status-concluido)">${concluido.size}</div><div class="stat-label">Concluídos</div></div>`;
+    } catch { /* silencioso */ }
+
+    // Pedidos recentes (últimos 5)
+    const qRecentes = query(collection(db, 'pedidos'), orderBy('criadoEm', 'desc'));
+    unsubPedidos = onSnapshot(qRecentes, (snap) => {
+      const el = document.getElementById('pedidosRecentes');
+      if (!el) return;
+      const docs = snap.docs.slice(0, 5);
+      if (docs.length === 0) { el.innerHTML = `<div class="empty-state"><span class="icon">📦</span><p>Nenhum pedido ainda.</p></div>`; return; }
+      el.innerHTML = docs.map(d => cardPedidoAdmin(d.id, d.data())).join('');
+    });
+  }
+
+  // ─── VIEW: PEDIDOS ────────────────────────────────────
+  function renderPedidos(main) {
+    filtroAtivo = 'todos';
+    main.innerHTML = `
+      <div class="section-label" style="margin-top:1rem">Todos os pedidos</div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="aplicarFiltro('todos',this)">Todos</button>
+        <button class="filter-tab" onclick="aplicarFiltro('aguardando',this)">⏳ Aguardando</button>
+        <button class="filter-tab" onclick="aplicarFiltro('aceito',this)">✅ Aceitos</button>
+        <button class="filter-tab" onclick="aplicarFiltro('andamento',this)">🚛 Andamento</button>
+        <button class="filter-tab" onclick="aplicarFiltro('concluido',this)">🏁 Concluídos</button>
+        <button class="filter-tab" onclick="aplicarFiltro('cancelado',this)">❌ Cancelados</button>
+      </div>
+      <div id="listaPedidos">
+        <div class="flex-center" style="height:40vh"><div class="spinner-lg"></div></div>
+      </div>`;
+
+    carregarPedidosFiltrados('todos');
+  }
+
+  window.aplicarFiltro = (filtro, btn) => {
+    filtroAtivo = filtro;
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    if (unsubPedidos) { unsubPedidos(); unsubPedidos = null; }
+    carregarPedidosFiltrados(filtro);
+  };
+
+  function carregarPedidosFiltrados(filtro) {
+    const q = filtro === 'todos'
+      ? query(collection(db, 'pedidos'), orderBy('criadoEm', 'desc'))
+      : query(collection(db, 'pedidos'), where('status', '==', filtro), orderBy('criadoEm', 'desc'));
+
+    unsubPedidos = onSnapshot(q, (snap) => {
+      const lista = document.getElementById('listaPedidos');
+      if (!lista) return;
+      if (snap.empty) {
+        lista.innerHTML = `<div class="empty-state"><span class="icon">📦</span><p>Nenhum pedido neste filtro.</p></div>`;
+        return;
+      }
+      lista.innerHTML = snap.docs.map(d => cardPedidoAdmin(d.id, d.data())).join('');
+    }, () => showToast('Erro ao carregar pedidos.', 'error'));
+  }
+
+  function cardPedidoAdmin(id, p) {
+    const STATUS = {
+      aguardando: { label: 'Aguardando', badge: 'badge-aguardando', emoji: '⏳' },
+      aceito:     { label: 'Aceito',     badge: 'badge-aceito',     emoji: '✅' },
+      andamento:  { label: 'Andamento',  badge: 'badge-andamento',  emoji: '🚛' },
+      concluido:  { label: 'Concluído',  badge: 'badge-concluido',  emoji: '🏁' },
+      cancelado:  { label: 'Cancelado',  badge: 'badge-cancelado',  emoji: '❌' },
+    };
+    const s = STATUS[p.status] || STATUS.aguardando;
+    const valor = p.valor ? `R$ ${Number(p.valor).toFixed(2).replace('.',',')}` : 'Sem orçamento';
+    return `
+      <div class="pedido-card" onclick="window._verPedidoAdmin('${id}')">
+        <div class="pedido-card-header">
+          <span class="badge ${s.badge}">${s.emoji} ${s.label}</span>
+          <span class="pedido-valor ${p.valor ? 'has-valor' : ''}">${valor}</span>
+        </div>
+        <div class="pedido-rota">
+          <div class="rota-item"><span class="rota-dot origem"></span><span>${p.origem}</span></div>
+          <div class="rota-line"></div>
+          <div class="rota-item"><span class="rota-dot destino"></span><span>${p.destino}</span></div>
+        </div>
+        <div class="pedido-meta">
+          <span>👤 ${p.clienteNome || '—'}</span>
+          ${p.motoristaNome ? `<span>🚛 ${p.motoristaNome}</span>` : ''}
+        </div>
+      </div>`;
+  }
+
+  // ─── VIEW: MOTORISTAS ─────────────────────────────────
+  function renderMotoristas(main) {
+    main.innerHTML = `
+      <div class="section-label" style="margin-top:1rem">Motoristas cadastrados</div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="filtrarMotoristas('todos',this)">Todos</button>
+        <button class="filter-tab" onclick="filtrarMotoristas('pendentes',this)">⏳ Pendentes <span class="badge-count" id="countPendentes">0</span></button>
+        <button class="filter-tab" onclick="filtrarMotoristas('ativos',this)">✅ Ativos</button>
+      </div>
+      <div id="listaMotoristas">
+        <div class="flex-center" style="height:40vh"><div class="spinner-lg"></div></div>
+      </div>`;
+
+    carregarMotoristas('todos');
+  }
+
+  let todosMotoristas = [];
+
+  async function carregarMotoristas(filtro) {
+    const lista = document.getElementById('listaMotoristas');
+    try {
+      const snap = await getDocs(query(collection(db, 'users'), where('tipo', '==', 'motorista')));
+      todosMotoristas = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // Atualizar badge de pendentes
+      const pendentes = todosMotoristas.filter(m => !m.ativo).length;
+      const countEl = document.getElementById('countPendentes');
+      if (countEl) countEl.textContent = pendentes;
+
+      renderListaMotoristas(filtro);
+    } catch {
+      if (lista) lista.innerHTML = `<div class="empty-state"><span class="icon">❌</span><p>Erro ao carregar motoristas.</p></div>`;
+    }
+  }
+
+  window.filtrarMotoristas = (filtro, btn) => {
+    document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderListaMotoristas(filtro);
+  };
+
+  function renderListaMotoristas(filtro) {
+    const lista = document.getElementById('listaMotoristas');
+    if (!lista) return;
+    let arr = todosMotoristas;
+    if (filtro === 'pendentes') arr = arr.filter(m => !m.ativo);
+    if (filtro === 'ativos')    arr = arr.filter(m => m.ativo);
+    if (arr.length === 0) {
+      lista.innerHTML = `<div class="empty-state"><span class="icon">🚛</span><p>Nenhum motorista neste filtro.</p></div>`;
+      return;
+    }
+    lista.innerHTML = arr.map(m => cardMotorista(m)).join('');
+  }
+
+  function cardMotorista(m) {
+    const foto = m.foto || `https://ui-avatars.com/api/?name=${encodeURIComponent(m.nome)}&background=222&color=F59E0B`;
+    const status = m.ativo
+      ? `<span class="badge badge-concluido">✅ Ativo</span>`
+      : `<span class="badge badge-aguardando">⏳ Pendente</span>`;
+    return `
+      <div class="motorista-card">
+        <img src="${foto}" class="motorista-avatar" />
+        <div class="motorista-info">
+          <div class="motorista-nome">${m.nome}</div>
+          <div class="motorista-meta">${m.veiculo || 'Veículo não informado'} · ${m.telefone || 'Sem telefone'}</div>
+          <div style="margin-top:4px">${status}</div>
+        </div>
+        <div class="motorista-actions">
+          ${!m.ativo
+            ? `<button class="btn btn-success btn-xs" onclick="window._aprovarMotorista('${m.id}')">Aprovar</button>`
+            : `<button class="btn btn-danger btn-xs" onclick="window._desativarMotorista('${m.id}')">Suspender</button>`}
+        </div>
+      </div>`;
+  }
+
+  window._aprovarMotorista = async (uid) => {
+    try {
+      await updateDoc(doc(db, 'users', uid), { ativo: true });
+      const m = todosMotoristas.find(x => x.id === uid);
+      if (m) m.ativo = true;
+      renderListaMotoristas(document.querySelector('.filter-tab.active')?.textContent?.trim()?.toLowerCase().includes('pend') ? 'pendentes'
+        : document.querySelector('.filter-tab.active')?.textContent?.trim()?.toLowerCase().includes('ativ') ? 'ativos' : 'todos');
+      showToast('Motorista aprovado! ✅', 'success');
+    } catch { showToast('Erro ao aprovar.', 'error'); }
+  };
+
+  window._desativarMotorista = async (uid) => {
+    if (!confirm('Suspender este motorista?')) return;
+    try {
+      await updateDoc(doc(db, 'users', uid), { ativo: false });
+      const m = todosMotoristas.find(x => x.id === uid);
+      if (m) m.ativo = false;
+      renderListaMotoristas('todos');
+      showToast('Motorista suspenso.', 'info');
+    } catch { showToast('Erro ao suspender.', 'error'); }
+  };
+
+  // ─── Modal: pedido admin ───────────────────────────────
+  window._verPedidoAdmin = async (id) => {
+    const snap = await getDoc(doc(db, 'pedidos', id));
+    if (!snap.exists()) return;
+    const p = snap.data();
+    const STATUS = {
+      aguardando: { label: 'Aguardando', badge: 'badge-aguardando', emoji: '⏳' },
+      aceito:     { label: 'Aceito',     badge: 'badge-aceito',     emoji: '✅' },
+      andamento:  { label: 'Em andamento', badge: 'badge-andamento', emoji: '🚛' },
+      concluido:  { label: 'Concluído',  badge: 'badge-concluido',  emoji: '🏁' },
+      cancelado:  { label: 'Cancelado',  badge: 'badge-cancelado',  emoji: '❌' },
+    };
+    const s = STATUS[p.status] || STATUS.aguardando;
+    const data = p.dataAgendada
+      ? new Date(p.dataAgendada).toLocaleDateString('pt-BR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' })
+      : '—';
+    const valor = p.valor ? `R$ ${Number(p.valor).toFixed(2).replace('.',',')}` : '—';
+
+    document.getElementById('modalTitle').textContent = 'Pedido #' + id.slice(-6).toUpperCase();
+    document.getElementById('modalBody').innerHTML = `
+      <div style="display:flex;flex-direction:column;gap:1rem">
+        <span class="badge ${s.badge}" style="align-self:flex-start">${s.emoji} ${s.label}</span>
+        <div class="detail-group">
+          <div class="detail-label">Cliente</div>
+          <div class="detail-value">👤 ${p.clienteNome || '—'}</div>
+        </div>
+        ${p.motoristaNome ? `
+          <div class="detail-group">
+            <div class="detail-label">Motorista</div>
+            <div class="detail-value">🚛 ${p.motoristaNome}</div>
+          </div>` : ''}
+        <div class="detail-group">
+          <div class="detail-label">Origem</div>
+          <div class="detail-value">📍 ${p.origem}</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">Destino</div>
+          <div class="detail-value">🏁 ${p.destino}</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">Data agendada</div>
+          <div class="detail-value">📅 ${data}</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">Descrição</div>
+          <div class="detail-value">${p.descricao}</div>
+        </div>
+        <div class="detail-group">
+          <div class="detail-label">Valor</div>
+          <div class="detail-value ${p.valor ? 'text-amber fw-bold' : 'text-muted'}" style="${p.valor ? 'font-size:1.2rem' : ''}">${valor}</div>
+        </div>
+        ${p.fotos?.length ? `
+          <div class="detail-group">
+            <div class="detail-label">Fotos</div>
+            <div class="fotos-grid">
+              ${p.fotos.map(url => `<a href="${url}" target="_blank"><img src="${url}" class="foto-grid-img" /></a>`).join('')}
+            </div>
+          </div>` : ''}
+        <div class="section-label" style="margin-top:0.5rem">Ações admin</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem">
+          ${p.status !== 'concluido' && p.status !== 'cancelado' ? `
+            <button class="btn btn-danger" onclick="window._cancelarAdmin('${id}')">❌ Cancelar pedido</button>` : ''}
+          ${p.status === 'aceito' ? `
+            <button class="btn btn-success" onclick="window._mudarStatusAdmin('${id}','andamento')">🚛 Forçar andamento</button>` : ''}
+          ${p.status === 'andamento' ? `
+            <button class="btn btn-primary" onclick="window._mudarStatusAdmin('${id}','concluido')">🏁 Forçar conclusão</button>` : ''}
+          <button class="btn btn-danger" style="background:rgba(239,68,68,0.06)" onclick="window._deletarPedido('${id}')">🗑️ Excluir</button>
+        </div>
+      </div>`;
+    document.getElementById('modalOverlay').classList.add('show');
+  };
+
+  window._cancelarAdmin = async (id) => {
+    if (!confirm('Cancelar este pedido?')) return;
+    try {
+      await updateDoc(doc(db, 'pedidos', id), { status: 'cancelado' });
+      fecharModal(); showToast('Pedido cancelado.', 'info');
+    } catch { showToast('Erro ao cancelar.', 'error'); }
+  };
+
+  window._mudarStatusAdmin = async (id, status) => {
+    try {
+      await updateDoc(doc(db, 'pedidos', id), { status });
+      fecharModal(); showToast('Status atualizado.', 'success');
+    } catch { showToast('Erro ao atualizar.', 'error'); }
+  };
+
+  window._deletarPedido = async (id) => {
+    if (!confirm('Excluir permanentemente este pedido? Esta ação não pode ser desfeita.')) return;
+    try {
+      await deleteDoc(doc(db, 'pedidos', id));
+      fecharModal(); showToast('Pedido excluído.', 'info');
+    } catch { showToast('Erro ao excluir.', 'error'); }
+  };
+
+  // ─── Helpers ──────────────────────────────────────────
+  window.fecharModal = () => document.getElementById('modalOverlay').classList.remove('show');
+
+  window.showToast = (msg, tipo = 'info') => {
+    const icons = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+    const c = document.getElementById('toastContainer');
+    const t = document.createElement('div');
+    t.className = `toast ${tipo}`;
+    t.innerHTML = `<span>${icons[tipo]}</span> ${msg}`;
+    c.appendChild(t);
+    setTimeout(() => {
+      t.style.opacity = '0'; t.style.transition = 'opacity 0.3s';
+      setTimeout(() => t.remove(), 300);
+    }, 3000);
+  };
+
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(console.error);
+</script>
+</body>
+</html>
