@@ -139,9 +139,9 @@
         }
         lista.innerHTML = snap.docs.map(d => cardPedido(d.id, d.data())).join('');
       }, (err) => {
-        console.error(err);
-        showToast('Erro ao carregar pedidos.', 'error');
-      });
+  console.error(err);
+  showToast(err.message, 'error'); // ← troca isso
+     });
     }
 
     function cardPedido(id, p) {
