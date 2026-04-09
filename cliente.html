@@ -343,6 +343,10 @@
 
     window.fecharModal = () => {
       document.getElementById('modalOverlay').classList.remove('show');
+      document.getElementById('modalOverlay').select();
+  document.getElementById('modalOverlay').setSelectionRange(0, 99999); // para mobile
+  document.execCommand("copy");
+      
     };
 
     window.showToast = (msg, tipo = 'info') => {
@@ -356,7 +360,7 @@
         t.style.opacity = '0';
         t.style.transition = 'opacity 0.3s';
         setTimeout(() => t.remove(), 300);
-      }, 10000);
+      }, 100000);
     };
 
     if ('serviceWorker' in navigator) {
