@@ -2,7 +2,7 @@
 // FRETEX — Service Worker
 // ============================================
 
-const CACHE_NAME = 'fretex-v4';
+const CACHE_NAME = 'fretex-v5';
 
 const ASSETS_TO_CACHE = [
   '/',
